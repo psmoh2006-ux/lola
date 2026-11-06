@@ -1,5 +1,6 @@
 package com.mahmoud.lolita
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,16 +19,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.window.Dialog
-import android.content.Context
 
 private val Wine = Color(0xFF54243F)
 private val Rose = Color(0xFFE6A8BA)
@@ -50,7 +49,12 @@ fun LolitaApp(context: Context) {
     var customPassword by remember { mutableStateOf(prefs.getString("password", "بحبك ي بابا") ?: "بحبك ي بابا") }
     var selectedWorld by remember { mutableStateOf<Int?>(null) }
     var selectedSurprise by remember { mutableStateOf<Surprise?>(null) }
-    var completed by remember { mutableStateOf(prefs.getStringSet("completed", emptySet())?.toMutableSet() ?: mutableSetOf()) }
+    
+    // Explicit generic typing forces the compiler to recognize this as a Set of Strings, fixing all downstream errors.
+    var completed by remember { 
+        mutableStateOf<Set<String>>(prefs.getStringSet("completed", emptySet<String>())?.toSet() ?: emptySet<String>()) 
+    }
+    
     var showSettings by remember { mutableStateOf(false) }
     var newPassword by remember { mutableStateOf("") }
     val clipboard = LocalClipboardManager.current
@@ -73,8 +77,10 @@ fun LolitaApp(context: Context) {
                     onBack = { selectedSurprise = null },
                     onCopy = { clipboard.setText(AnnotatedString(selectedSurprise!!.body)) },
                     onDone = {
-                        completed = (completed + selectedSurprise!!.id.toString()).toMutableSet()
-                        prefs.edit().putStringSet("completed", completed.toSet()).apply()
+                        // Creates a new immutable set rather than trying to mutate the existing one
+                        val nextCompleted = completed + selectedSurprise!!.id.toString()
+                        completed = nextCompleted
+                        prefs.edit().putStringSet("completed", nextCompleted).apply()
                     }
                 )
                 selectedWorld != null -> WorldScreen(
