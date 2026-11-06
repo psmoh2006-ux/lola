@@ -108,7 +108,7 @@ fun LolitaApp(context: Context) {
                     }
                 )
                 else -> HomeScreen(
-                    completedCount = completed.size,
+                    completed = completed, 
                     onWorld = { selectedWorld = it },
                     onSettings = { showSettings = true }
                 )
@@ -161,7 +161,7 @@ fun LoginScreen(password: String, onPassword: (String)->Unit, onEnter: ()->Unit)
 }
 
 @Composable
-fun HomeScreen(completedCount: Int, onWorld: (Int)->Unit, onSettings: ()->Unit) {
+fun HomeScreen(completed: Set<String>, onWorld: (Int)->Unit, onSettings: ()->Unit) {
     Background {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text("Alaa's World", color = Wine, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
@@ -171,14 +171,15 @@ fun HomeScreen(completedCount: Int, onWorld: (Int)->Unit, onSettings: ()->Unit) 
             Column(Modifier.padding(22.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("أهلًا يا لوليتا ❤️", color = Color(0xFFFFE8EF), fontSize = 27.sp, fontWeight = FontWeight.Bold)
                 Text("كل باب هنا وراه حكاية صغيرة من محمود ليكي", color = Color.White)
-                Text("$completedCount من 100 مفاجأة اتفتحت", color = Rose, fontWeight = FontWeight.Bold)
-                LinearProgressIndicator(progress = { completedCount / 100f }, modifier = Modifier.fillMaxWidth(),
+                Text("${completed.size} من 100 مفاجأة اتفتحت", color = Rose, fontWeight = FontWeight.Bold)
+                LinearProgressIndicator(progress = { completed.size / 100f }, modifier = Modifier.fillMaxWidth(),
                     color = Rose, trackColor = Color.White.copy(alpha=.2f))
             }
         }
         Text("اختاري عالمك", color = Wine, fontSize = 21.sp, fontWeight = FontWeight.Bold)
         LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(bottom = 20.dp)) {
             items(worlds) { world ->
+                // The compiler can now resolve 'completed' successfully here
                 val count = surprises.count { it.worldId == world.id && completed.contains(it.id.toString()) }
                 Card(
                     modifier = Modifier.fillMaxWidth().clickable { onWorld(world.id) },
